@@ -16,6 +16,7 @@ class Mvhd: Atom {
     var timeScale: Double
     /// the duration in milliseconds
     var duration: Double
+    private var durationRaw: Data
     var preferredRate: UInt32
     var preferredVolume: UInt16
     var previewTime: UInt32
@@ -45,9 +46,11 @@ class Mvhd: Atom {
         
         self.timeScale = data.extractToDouble(4)
         if self.version.uInt8BE == 0x01 {
-            self.duration = data.extractToDouble(8)
+            self.durationRaw = data.extractFirst(8)
+            self.duration = self.durationRaw.uInt64BE.double
         } else {
-            self.duration = data.extractToDouble(4)
+            self.durationRaw = data.extractFirst(4)
+            self.duration = self.durationRaw.uInt32BE.double
         }
         
         self.preferredRate = data.extractFirst(4).uInt32BE
@@ -91,11 +94,7 @@ class Mvhd: Atom {
             data.append(self.modificationTime.uInt32.beData)
         }
         data.append(self.timeScale.uInt32.beData)
-        if self.version.uInt8BE == 0x01 {
-            data.append(self.duration.uInt64.beData)
-        } else {
-            data.append(self.duration.uInt32.beData)
-        }
+        data.append(self.durationRaw)
         data.append(self.preferredRate.beData)
         data.append(self.preferredVolume.beData)
         data.append(Atom.addReserveData(10))

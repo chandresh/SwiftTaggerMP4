@@ -16,6 +16,7 @@ class Mdhd: Atom {
     var timeScale: Double
     /// The duration of the media contained in the track
     var duration: Double
+    private var durationRaw: Data
     private var languageUInt16: UInt16
     var quality: Int
     
@@ -38,9 +39,11 @@ class Mdhd: Atom {
         
         self.timeScale = data.extractToDouble(4)
         if self.version.uInt8BE == 0x01 {
-            self.duration = data.extractToDouble(8)
+            self.durationRaw = data.extractFirst(8)
+            self.duration = self.durationRaw.uInt64BE.double
         } else {
-            self.duration = data.extractToDouble(4)
+            self.durationRaw = data.extractFirst(4)
+            self.duration = self.durationRaw.uInt32BE.double
         }
         
         self.languageUInt16 = data.extractFirst(2).uInt16BE
@@ -114,6 +117,11 @@ class Mdhd: Atom {
         self.flags = Atom.flags
         self.timeScale = 1000
         self.duration = durationMs
+        if self.version.uInt8BE == 0x01 {
+            self.durationRaw = durationMs.uInt64.beData
+        } else {
+            self.durationRaw = durationMs.uInt32.beData
+        }
         self.languageUInt16 = language.getUInt16Code()
         self.quality = 0
 
@@ -150,6 +158,11 @@ class Mdhd: Atom {
 
         self.timeScale = 1000
         self.duration = durationMs
+        if self.version.uInt8BE == 0x01 {
+            self.durationRaw = durationMs.uInt64.beData
+        } else {
+            self.durationRaw = durationMs.uInt32.beData
+        }
         self.languageUInt16 = language.iso6392Code.getUInt16Code()
         self.quality = 0
 
@@ -182,11 +195,7 @@ class Mdhd: Atom {
             data.append(self.modificationTime.uInt32.beData)
         }
         data.append(self.timeScale.uInt32.beData)
-        if self.version.uInt8BE == 0x01 {
-            data.append(self.duration.uInt64.beData)
-        } else {
-            data.append(self.duration.uInt32.beData)
-        }
+        data.append(self.durationRaw)
         data.append(self.languageUInt16.beData)
         data.append(self.quality.uInt16.beData)
         return data

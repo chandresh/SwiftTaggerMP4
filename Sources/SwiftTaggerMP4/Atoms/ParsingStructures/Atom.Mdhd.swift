@@ -109,19 +109,12 @@ class Mdhd: Atom {
     ///
     /// **NOTE:** for use in a CHAPTER TRAK ONLY
     init(language: ISO6392Code, moov: Moov) throws {
-        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
-        // Use version 1 (UInt64) when duration or timestamps exceed UInt32 range
-        let needsVersion1 = durationMs > Double(UInt32.max) ||
-                            Date().dateIntervalSince1904 > Int(UInt32.max)
-        self.version = needsVersion1 ? UInt8(0x01).beData : Atom.version
+        
+        self.version = Atom.version
         self.flags = Atom.flags
         self.timeScale = 1000
+        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
         self.duration = durationMs
-        if self.version.uInt8BE == 0x01 {
-            self.durationRaw = durationMs.uInt64.beData
-        } else {
-            self.durationRaw = durationMs.uInt32.beData
-        }
         self.languageUInt16 = language.getUInt16Code()
         self.quality = 0
 
@@ -135,9 +128,11 @@ class Mdhd: Atom {
         if self.version.uInt8BE == 0x01 {
             // creation, modification, duration * 8
             size += 24
+            self.durationRaw = durationMs.uInt64.beData
         } else {
             // creation, modification, duration * 4
             size += 12
+            self.durationRaw = durationMs.uInt32.beData
         }
 
         try super.init(identifier: "mdhd",
@@ -149,20 +144,13 @@ class Mdhd: Atom {
     /// **NOTE:** for use in a CHAPTER TRAK ONLY
     init(elng: Elng, moov: Moov) throws {
         let language = Mdhd.getLanguage(from: elng)
-        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
-        // Use version 1 (UInt64) when duration or timestamps exceed UInt32 range
-        let needsVersion1 = durationMs > Double(UInt32.max) ||
-                            Date().dateIntervalSince1904 > Int(UInt32.max)
-        self.version = needsVersion1 ? UInt8(0x01).beData : Atom.version
+
+        self.version = Atom.version
         self.flags = Atom.flags
 
         self.timeScale = 1000
+        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
         self.duration = durationMs
-        if self.version.uInt8BE == 0x01 {
-            self.durationRaw = durationMs.uInt64.beData
-        } else {
-            self.durationRaw = durationMs.uInt32.beData
-        }
         self.languageUInt16 = language.iso6392Code.getUInt16Code()
         self.quality = 0
 
@@ -170,9 +158,11 @@ class Mdhd: Atom {
         if self.version.uInt8BE == 0x01 {
             // creation, modification, duration * 8
             size += 24
+            self.durationRaw = durationMs.uInt64.beData
         } else {
             // creation, modification, duration * 4
             size += 12
+            self.durationRaw = durationMs.uInt32.beData
         }
 
         try super.init(identifier: "mdhd",

@@ -69,11 +69,8 @@ class Elst: Atom {
                 data.append(entry.segmentDuration.uInt64.beData)
                 data.append(entry.mediaTime.uInt64.beData)
             } else {
-                // Clamp to UInt32.max to prevent fatal error on very large values
-                let clampedDuration = min(entry.segmentDuration, Double(UInt32.max))
-                let clampedTime = min(entry.mediaTime, Double(UInt32.max))
-                data.append(clampedDuration.uInt32.beData)
-                data.append(clampedTime.uInt32.beData)
+                data.append(entry.segmentDuration.uInt32.beData)
+                data.append(entry.mediaTime.uInt32.beData)
             }
             data.append(entry.mediaRate.uInt16.beData)
             data.append(Atom.addReserveData(2))

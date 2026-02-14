@@ -144,9 +144,7 @@ class Stts: Atom {
         data.append(entryCount.uInt32.beData)
         for entry in self.sampleTable {
             data.append(entry.sampleCount.uInt32.beData)
-            // Clamp to UInt32.max to prevent fatal error on large durations
-            let clampedDuration = min(entry.sampleDuration, Double(UInt32.max))
-            data.append(clampedDuration.uInt32.beData)
+            data.append(entry.sampleDuration.uInt32.beData)
         }
         return data
     }

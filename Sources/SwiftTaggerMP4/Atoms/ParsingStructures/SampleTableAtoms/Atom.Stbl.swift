@@ -35,7 +35,7 @@ class Stbl: Atom {
         guard children.contains(where: {$0.identifier == "stsz"}) else {
             throw StblError.StszAtomNotFound
         }
-        guard children.contains(where: {$0.identifier == "co64" || $0.identifier == "stco"}) else {
+        guard children.contains(where: {$0.identifier == "c064" || $0.identifier == "stco"}) else {
             throw StblError.ChunkOffsetAtomNotFound
         }
 
@@ -75,11 +75,8 @@ class Stbl: Atom {
         let stsc = try Stsc()
 
         let mvhd = moov.mvhd
-        // Convert movie duration from timescale units to milliseconds
-        // (chapter start times are in ms, so mediaDuration must match)
-        let mediaDurationMs = mvhd.duration / mvhd.timeScale * 1000
         let stts = try Stts(chapterHandler: chapterHandler,
-                            mediaDuration: mediaDurationMs)
+                            mediaDuration: mvhd.duration)
         
         let stsz = try Stsz(titles: chapterHandler.chapterTitles)
         try self.init(children: [stsd, stsc, stts, stsz])

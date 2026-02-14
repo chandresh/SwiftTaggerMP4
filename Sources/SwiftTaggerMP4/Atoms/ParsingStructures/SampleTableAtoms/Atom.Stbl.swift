@@ -75,8 +75,11 @@ class Stbl: Atom {
         let stsc = try Stsc()
 
         let mvhd = moov.mvhd
+        // Convert movie duration from timescale units to milliseconds
+        // (chapter start times are in ms, so mediaDuration must match)
+        let mediaDurationMs = mvhd.duration / mvhd.timeScale * 1000
         let stts = try Stts(chapterHandler: chapterHandler,
-                            mediaDuration: mvhd.duration)
+                            mediaDuration: mediaDurationMs)
         
         let stsz = try Stsz(titles: chapterHandler.chapterTitles)
         try self.init(children: [stsd, stsc, stts, stsz])

@@ -35,7 +35,7 @@ class Stbl: Atom {
         guard children.contains(where: {$0.identifier == "stsz"}) else {
             throw StblError.StszAtomNotFound
         }
-        guard children.contains(where: {$0.identifier == "c064" || $0.identifier == "stco"}) else {
+        guard children.contains(where: {$0.identifier == "co64" || $0.identifier == "stco"}) else {
             throw StblError.ChunkOffsetAtomNotFound
         }
 

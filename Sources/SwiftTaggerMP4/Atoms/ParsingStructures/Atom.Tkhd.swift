@@ -87,9 +87,12 @@ class Tkhd: Atom {
     ///
     /// Specifically for use with chapter tracks. May not work in other contexts.
     init(mediaDuration: Double, trackID: Int) throws {
-        self.version = Atom.version
+        // Use version 1 (UInt64) when duration or timestamps exceed UInt32 range
+        let needsVersion1 = mediaDuration > Double(UInt32.max) ||
+                            Date().dateIntervalSince1904 > Int(UInt32.max)
+        self.version = needsVersion1 ? UInt8(0x01).beData : Atom.version
         self.flags = Atom.flags
-        
+
         self.trackID = trackID
         if self.version.uInt8BE == 0x01 {
             self.durationRaw = mediaDuration.uInt64.beData
@@ -102,7 +105,7 @@ class Tkhd: Atom {
         self.volume = 0
         self.trackWidth = 0
         self.trackHeight = 0
-        
+
         var size = 80
         if self.version.uInt8BE == 0x01 {
             size += 24

@@ -106,14 +106,17 @@ class Mdhd: Atom {
     ///
     /// **NOTE:** for use in a CHAPTER TRAK ONLY
     init(language: ISO6392Code, moov: Moov) throws {
-        
-        self.version = Atom.version
+        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
+        // Use version 1 (UInt64) when duration or timestamps exceed UInt32 range
+        let needsVersion1 = durationMs > Double(UInt32.max) ||
+                            Date().dateIntervalSince1904 > Int(UInt32.max)
+        self.version = needsVersion1 ? UInt8(0x01).beData : Atom.version
         self.flags = Atom.flags
         self.timeScale = 1000
-        self.duration = moov.mvhd.duration / moov.mvhd.timeScale * 1000
+        self.duration = durationMs
         self.languageUInt16 = language.getUInt16Code()
         self.quality = 0
-        
+
         // 4 size
         // 4 id
         // 4 version and flags
@@ -128,25 +131,28 @@ class Mdhd: Atom {
             // creation, modification, duration * 4
             size += 12
         }
-        
+
         try super.init(identifier: "mdhd",
                        size: size)
     }
-    
+
     /// **CHAPTER TRACK ONLY** Initialize a `mdhd` atom from a duration and `elng` atom
     ///
     /// **NOTE:** for use in a CHAPTER TRAK ONLY
     init(elng: Elng, moov: Moov) throws {
         let language = Mdhd.getLanguage(from: elng)
-        
-        self.version = Atom.version
+        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
+        // Use version 1 (UInt64) when duration or timestamps exceed UInt32 range
+        let needsVersion1 = durationMs > Double(UInt32.max) ||
+                            Date().dateIntervalSince1904 > Int(UInt32.max)
+        self.version = needsVersion1 ? UInt8(0x01).beData : Atom.version
         self.flags = Atom.flags
-        
+
         self.timeScale = 1000
-        self.duration = moov.mvhd.duration / moov.mvhd.timeScale * 1000
+        self.duration = durationMs
         self.languageUInt16 = language.iso6392Code.getUInt16Code()
         self.quality = 0
-        
+
         var size: Int = 20
         if self.version.uInt8BE == 0x01 {
             // creation, modification, duration * 8

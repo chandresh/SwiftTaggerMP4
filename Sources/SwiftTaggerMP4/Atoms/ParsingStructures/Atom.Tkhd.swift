@@ -133,11 +133,7 @@ class Tkhd: Atom {
         }
         data.append(self.trackID.uInt32.beData)
         data.append(Atom.addReserveData(4))
-        if self.version.uInt8BE == 0x01 {
-            data.append(self.duration.uInt64.beData)
-        } else {
-            data.append(self.duration.uInt32.beData)
-        }
+        data.append(self.durationRaw)
         data.append(Atom.addReserveData(8))
         data.append(self.layer.beData)
         data.append(self.alternateGroup.beData)

@@ -115,15 +115,23 @@ class Tkhd: Atom {
                        size: size)
     }
     
+    /// Promote from version 0 (32-bit) to version 1 (64-bit) if the computed
+    /// duration overflows UInt32.  Must be called **before** any offset
+    /// calculation that relies on `self.size` (e.g. `calculateNewMediaOffsets`).
+    func promoteVersionIfNeeded() {
+        guard self.version.uInt8BE != 0x01,
+              self.duration > Double(UInt32.max) else { return }
+        self.version = UInt8(0x01).beData
+        // 3 fields grow from 4 → 8 bytes: creationTime, modificationTime, duration
+        self.size += 12
+    }
+
     /// Converts the atom's contents to Data when encoding the atom to write to file.
     override var contentData: Data {
-        // Auto-promote to version 1 (64-bit) if computed duration overflows UInt32
-        let effectiveVersion: UInt8 = (self.duration > Double(UInt32.max)) ? 0x01 : self.version.uInt8BE
-
         var data = Data()
-        data.append(effectiveVersion.beData)
+        data.append(self.version)
         data.append(self.flags)
-        if effectiveVersion == 0x01 {
+        if self.version.uInt8BE == 0x01 {
             data.append(self.creationTime.uInt64.beData)
             data.append(self.modificationTime.uInt64.beData)
         } else {
@@ -132,7 +140,7 @@ class Tkhd: Atom {
         }
         data.append(self.trackID.uInt32.beData)
         data.append(Atom.addReserveData(4))
-        if effectiveVersion == 0x01 {
+        if self.version.uInt8BE == 0x01 {
             data.append(self.duration.uInt64.beData)
         } else {
             data.append(self.duration.uInt32.beData)

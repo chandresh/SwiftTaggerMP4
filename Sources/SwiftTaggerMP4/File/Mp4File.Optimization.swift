@@ -141,11 +141,23 @@ extension Mp4File {
     }
 
     func setMdat(tag: Tag) throws {
+        // Promote any Tkhd atoms to version 1 (64-bit) if their computed
+        // duration overflows UInt32.  This must happen before
+        // calculateNewMediaOffsets() which relies on accurate .size values.
+        for track in self.moov.tracks {
+            track.tkhd.promoteVersionIfNeeded()
+        }
+        // Propagate any size changes up the atom tree
+        for track in self.moov.tracks {
+            track.recalculateSize()
+        }
+        self.moov.recalculateSize()
+
         let titles = tag.chapterHandler.chapterTitles
         let mdat = try Mdat(mediaData: getMediaData(),
                             titleArray: titles)
         self.mdats = [mdat]
-        
+
         self.moov.soundTrack.mdia.minf.stbl.chunkOffsetAtom.chunkOffsetTable = try calculateNewMediaOffsets()
     }
     

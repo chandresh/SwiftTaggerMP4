@@ -117,13 +117,13 @@ class Tkhd: Atom {
     
     /// Converts the atom's contents to Data when encoding the atom to write to file.
     override var contentData: Data {
-        let reserve = size - 8
+        // Auto-promote to version 1 (64-bit) if computed duration overflows UInt32
+        let effectiveVersion: UInt8 = (self.duration > Double(UInt32.max)) ? 0x01 : self.version.uInt8BE
+
         var data = Data()
-        data.reserveCapacity(reserve)
-        
-        data.append(self.version)
+        data.append(effectiveVersion.beData)
         data.append(self.flags)
-        if self.version.uInt8BE == 0x01 {
+        if effectiveVersion == 0x01 {
             data.append(self.creationTime.uInt64.beData)
             data.append(self.modificationTime.uInt64.beData)
         } else {
@@ -132,7 +132,7 @@ class Tkhd: Atom {
         }
         data.append(self.trackID.uInt32.beData)
         data.append(Atom.addReserveData(4))
-        if self.version.uInt8BE == 0x01 {
+        if effectiveVersion == 0x01 {
             data.append(self.duration.uInt64.beData)
         } else {
             data.append(self.duration.uInt32.beData)

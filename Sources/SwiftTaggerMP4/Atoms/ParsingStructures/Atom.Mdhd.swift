@@ -109,11 +109,12 @@ class Mdhd: Atom {
     ///
     /// **NOTE:** for use in a CHAPTER TRAK ONLY
     init(language: ISO6392Code, moov: Moov) throws {
-        
-        self.version = Atom.version
+        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
+        // Use version 1 (64-bit fields) when duration overflows UInt32
+        let needsVersion1 = durationMs > Double(UInt32.max)
+        self.version = needsVersion1 ? UInt8(0x01).beData : Atom.version
         self.flags = Atom.flags
         self.timeScale = 1000
-        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
         self.duration = durationMs
         self.languageUInt16 = language.getUInt16Code()
         self.quality = 0
@@ -125,7 +126,7 @@ class Mdhd: Atom {
         // 2 language
         // 2 quality
         var size: Int = 20
-        if self.version.uInt8BE == 0x01 {
+        if needsVersion1 {
             // creation, modification, duration * 8
             size += 24
             self.durationRaw = durationMs.uInt64.beData
@@ -144,18 +145,19 @@ class Mdhd: Atom {
     /// **NOTE:** for use in a CHAPTER TRAK ONLY
     init(elng: Elng, moov: Moov) throws {
         let language = Mdhd.getLanguage(from: elng)
-
-        self.version = Atom.version
+        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
+        // Use version 1 (64-bit fields) when duration overflows UInt32
+        let needsVersion1 = durationMs > Double(UInt32.max)
+        self.version = needsVersion1 ? UInt8(0x01).beData : Atom.version
         self.flags = Atom.flags
 
         self.timeScale = 1000
-        let durationMs = moov.mvhd.duration / moov.mvhd.timeScale * 1000
         self.duration = durationMs
         self.languageUInt16 = language.iso6392Code.getUInt16Code()
         self.quality = 0
 
         var size: Int = 20
-        if self.version.uInt8BE == 0x01 {
+        if needsVersion1 {
             // creation, modification, duration * 8
             size += 24
             self.durationRaw = durationMs.uInt64.beData

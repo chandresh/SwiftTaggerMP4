@@ -75,8 +75,9 @@ class Stbl: Atom {
         let stsc = try Stsc()
 
         let mvhd = moov.mvhd
+        let durationMs = mvhd.duration / mvhd.timeScale * 1000
         let stts = try Stts(chapterHandler: chapterHandler,
-                            mediaDuration: mvhd.duration)
+                            mediaDuration: durationMs)
         
         let stsz = try Stsz(titles: chapterHandler.chapterTitles)
         try self.init(children: [stsd, stsc, stts, stsz])

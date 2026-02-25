@@ -129,8 +129,12 @@ struct ChapterHandler {
         }
         
         // Handle the last one.
+        // Clamp to a minimum of 1ms so the STTS atom always has a valid
+        // non-zero duration.  A zero-duration final chapter causes the
+        // text-track chapter length to be shorter than the chpl atom,
+        // which makes Apple Books (and other players) ignore all chapters.
         let lastStart = chapterStarts.last ?? firstStart
-        chapterDurations.append(max(0, mediaDuration - Double(lastStart)))
+        chapterDurations.append(max(1, mediaDuration - Double(lastStart)))
         return chapterDurations
     }
     

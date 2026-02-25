@@ -130,7 +130,7 @@ struct ChapterHandler {
         
         // Handle the last one.
         let lastStart = chapterStarts.last ?? firstStart
-        chapterDurations.append(mediaDuration - Double(lastStart))
+        chapterDurations.append(max(0, mediaDuration - Double(lastStart)))
         return chapterDurations
     }
     

@@ -144,7 +144,7 @@ class Stts: Atom {
         data.append(entryCount.uInt32.beData)
         for entry in self.sampleTable {
             data.append(entry.sampleCount.uInt32.beData)
-            data.append(entry.sampleDuration.uInt32.beData)
+            data.append(max(0, entry.sampleDuration).uInt32.beData)
         }
         return data
     }
